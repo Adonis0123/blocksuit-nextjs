@@ -25,7 +25,6 @@ const presetMarkdown = `This playground is designed to:
 
 ## Controlling Playground Data Source
 You might initially enter this page with the \`?init\` URL param. This is the default (opt-in) setup that automatically loads this built-in article. Meanwhile, you'll connect to a random single-user room via a WebRTC provider by default. This is the "single-user mode" for local testing.;
-To test real-time collaboration, you can specify the room to join by adding the \`?room=foo\` config - Try opening this page with \`?room=foo\` in two different tabs and see what happens!
 
 > Note that the second and subsequent users should not open the page with the \`?init\` param in this case. Also, due to the P2P nature of WebRTC, as long as there is at least one user connected to the room, the content inside the room will **always** exist.
 `;
@@ -39,12 +38,17 @@ const Editor: React.FC<IEditorProps> = (props) => {
   const [displayMarkdownList, setDisplayMarkdownList, getDisplayMarkdownList] =
     useGetState<string[]>([]);
 
+  const [canEditor, setCanEditor] = useState<boolean>(false);
+
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
       setDisplayMarkdown(presetMarkdown.substring(0, i));
       i++;
-      if (i > presetMarkdown.length) clearInterval(interval);
+      if (i > presetMarkdown.length) {
+        setCanEditor(true);
+        clearInterval(interval);
+      }
     }, 10);
 
     return () => clearInterval(interval);
@@ -120,7 +124,12 @@ const Editor: React.FC<IEditorProps> = (props) => {
     }
   );
 
-  return <div ref={ref} className={`editor-wrap`} />;
+  return (
+    <div
+      ref={ref}
+      className={`editor-wrap ${canEditor ? '' : 'pointer-events-none'}`}
+    />
+  );
 };
 
 export default Editor;
