@@ -127,7 +127,7 @@ const Editor: React.FC<IEditorProps> = (props) => {
   return (
     <div
       ref={ref}
-      className={`h-[90vh] editor-wrap ${
+      className={`h-[90vh] w-full editor-wrap ${
         canEditor ? '' : 'pointer-events-none'
       }`}
     />
