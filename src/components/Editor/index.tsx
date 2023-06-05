@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { addShapeElement, createEditor, createWorkspaceOptions } from './utils';
 import { __unstableSchemas, AffineSchemas } from '@blocksuite/blocks/models';
-import { useAsyncEffect, useGetState, useThrottleEffect } from 'ahooks';
+import { useMount, useUpdateEffect } from 'ahooks';
 import type { Page } from '@blocksuite/store';
 import { Text, Workspace } from '@blocksuite/store';
 import { ContentParser } from '@blocksuite/blocks/content-parser';
@@ -13,21 +13,10 @@ import {
 } from '@blocksuite/blocks';
 import { StrokeStyle } from '@blocksuite/phasor';
 import '@blocksuite/editor/themes/affine.css';
+import { presetMarkdown } from './data';
 export interface IEditorProps {
   className?: string;
 }
-
-const presetMarkdown = `This playground is designed to:
-
-* 📝 Test basic editing experience.
-* ⚙️ Serve as E2E test entry.
-* 🔗 Demonstrate how BlockSuite reconciles real-time collaboration with [local-first](https://martin.kleppmann.com/papers/local-first.pdf) data ownership.
-
-## Controlling Playground Data Source
-You might initially enter this page with the \`?init\` URL param. This is the default (opt-in) setup that automatically loads this built-in article. Meanwhile, you'll connect to a random single-user room via a WebRTC provider by default. This is the "single-user mode" for local testing.;
-
-> Note that the second and subsequent users should not open the page with the \`?init\` param in this case. Also, due to the P2P nature of WebRTC, as long as there is at least one user connected to the room, the content inside the room will **always** exist.
-`;
 
 const options = createWorkspaceOptions();
 const pageId = 'step-article-page';
@@ -35,55 +24,85 @@ const Editor: React.FC<IEditorProps> = (props) => {
   const { className } = props;
 
   const [displayMarkdown, setDisplayMarkdown] = useState('');
-
   const [canEditor, setCanEditor] = useState<boolean>(false);
 
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayMarkdown(presetMarkdown.substring(0, i));
-      i++;
-      if (i > presetMarkdown.length) {
-        setCanEditor(true);
-        clearInterval(interval);
-      }
-    }, 10);
+  useEffect(()=>{
+    console.log(crypto.subtle,'crypto.subtle')
+  },[])
 
-    return () => clearInterval(interval);
+  useEffect(() => {
+    // 获取浏览器参数
+    const url = new URL(window.location.href);
+    const searchParams = url.searchParams;
+    const init = searchParams.get('init');
+
+    if (init === 'streaming') {
+      let i = 0;
+      const interval = setInterval(() => {
+        setDisplayMarkdown(presetMarkdown.substring(0, i));
+        i++;
+        if (i > presetMarkdown.length) {
+          setCanEditor(true);
+          clearInterval(interval);
+        }
+      }, 10);
+      return () => clearInterval(interval);
+    } else {
+      setCanEditor(true);
+      setDisplayMarkdown(presetMarkdown);
+    }
   }, []);
 
   const ref = useRef<HTMLDivElement>(null);
-  const [workspace, setWorkspace] = useState<Workspace>(null!);
-  const [page, setPage] = useState<Page>(null!);
-  const [pageBlockId, setPageBlockId] = useState<string>('');
-  const [contentParser, setContentParser] = useState<ContentParser>(null!);
+
+  const workspaceRef = useRef<Workspace>(null!);
+  const pageRef = useRef<Page>(null!);
+
+  const pageBlockIdRef = useRef<string>('');
+  const contentParserRef = useRef<ContentParser>(null!);
   const [frameId, setFrameId] = useState<string>('');
-  useAsyncEffect(async () => {
-    if (ref.current && !workspace && !page) {
+
+  // 初始化workspace、page
+  useMount(() => {
+    if (
+      ref.current &&
+      !workspaceRef.current &&
+      !pageRef.current &&
+      !pageBlockIdRef.current
+    ) {
       const workspace = new Workspace(options)
         .register(AffineSchemas)
         .register(__unstableSchemas);
       const page = workspace.createPage({ id: pageId });
-      // Add page block and surface block at root level
-      const pageBlockId = page.addBlock('affine:page', {
+      const contentParser = new ContentParser(page);
+      createEditor(page, ref.current);
+      pageRef.current = page;
+      workspaceRef.current = workspace;
+
+      contentParserRef.current = contentParser;
+    }
+  });
+
+  useEffect(() => {
+    if (!pageRef.current) {
+      return;
+    }
+    if (!pageBlockIdRef.current) {
+      const _pageBlockId = pageRef.current.addBlock('affine:page', {
         title: new Text('Welcome to BlockSuite Playground'),
       });
-
-      const surfaceBlockId = page.addBlock('affine:surface', {}, pageBlockId);
-      setPageBlockId(pageBlockId);
-      // Add frame block inside page block
-      // const frameId = page.addBlock('affine:frame', {}, pageBlockId);
-      // Import preset markdown content inside frame block
-      const contentParser = new ContentParser(page);
-      addShapeElement(page, surfaceBlockId, {
+      const surfaceBlockId = pageRef.current.addBlock(
+        'affine:surface',
+        {},
+        _pageBlockId
+      );
+      addShapeElement(pageRef.current, surfaceBlockId, {
         id: '0',
         index: 'a0',
         type: 'shape',
         xywh: '[0,-100,100,100]',
         seed: Math.floor(Math.random() * 2 ** 31),
-
         shapeType: 'rect',
-
         radius: 0,
         filled: false,
         fillColor: DEFAULT_SHAPE_FILL_COLOR,
@@ -92,35 +111,31 @@ const Editor: React.FC<IEditorProps> = (props) => {
         strokeStyle: StrokeStyle.Solid,
         roughness: 2,
       });
-      // contentParser.importMarkdown(presetMarkdown, frameId);
-      createEditor(page, ref.current);
-      setPage(page);
-      setWorkspace(workspace);
-      setContentParser(contentParser);
-      // console.log(page.root,'page')
+      pageBlockIdRef.current = _pageBlockId;
     }
   }, []);
 
-  useThrottleEffect(
-    () => {
-      if (!page) {
-        return;
-      }
-      if (frameId) {
-        const block = page.getBlockById(frameId);
-        if (block) {
-          page.deleteBlock(block);
-        }
-      }
-      const newFrameId = page.addBlock('affine:frame', {}, pageBlockId);
-      contentParser.importMarkdown(displayMarkdown, newFrameId);
-      setFrameId(newFrameId);
-    },
-    [displayMarkdown, page, pageBlockId],
-    {
-      wait: 0,
+  useUpdateEffect(() => {
+    if (!pageRef.current) {
+      return;
     }
-  );
+    if (frameId) {
+      const block = pageRef.current.getBlockById(frameId);
+      if (block) {
+        pageRef.current.deleteBlock(block);
+      }
+    }
+    const newFrameId = pageRef.current.addBlock(
+      'affine:frame',
+      {},
+      pageBlockIdRef.current
+    );
+    contentParserRef.current
+      .importMarkdown(displayMarkdown, newFrameId)
+      .then(() => {
+        setFrameId(newFrameId);
+      });
+  }, [displayMarkdown]);
 
   return (
     <div
