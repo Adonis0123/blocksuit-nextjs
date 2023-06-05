@@ -35,8 +35,6 @@ const Editor: React.FC<IEditorProps> = (props) => {
   const { className } = props;
 
   const [displayMarkdown, setDisplayMarkdown] = useState('');
-  const [displayMarkdownList, setDisplayMarkdownList, getDisplayMarkdownList] =
-    useGetState<string[]>([]);
 
   const [canEditor, setCanEditor] = useState<boolean>(false);
 
