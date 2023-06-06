@@ -3,6 +3,8 @@ import {
   createIndexeddbStorage,
   createMemoryStorage,
   createSimpleServerStorage,
+
+  
   DebugDocProvider,
   type DocProviderConstructor,
   Generator,
@@ -22,7 +24,7 @@ export function createWorkspaceOptions(): WorkspaceOptions {
   const providers: DocProviderConstructor[] = [];
   const blobStorages: ((id: string) => BlobStorage)[] = [];
   let idGenerator: Generator = Generator.AutoIncrement; // works only in single user mode
-
+  blobStorages.push(createMemoryStorage)
   return {
     id: 'step-article',
     providers,

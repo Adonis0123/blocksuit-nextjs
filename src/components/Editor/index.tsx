@@ -26,9 +26,7 @@ const Editor: React.FC<IEditorProps> = (props) => {
   const [displayMarkdown, setDisplayMarkdown] = useState('');
   const [canEditor, setCanEditor] = useState<boolean>(false);
 
-  useEffect(()=>{
-    console.log(crypto.subtle,'crypto.subtle')
-  },[])
+ 
 
   useEffect(() => {
     // 获取浏览器参数
