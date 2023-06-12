@@ -89,26 +89,6 @@ const Editor: React.FC<IEditorProps> = (props) => {
       const _pageBlockId = pageRef.current.addBlock('affine:page', {
         title: new Text('Welcome to BlockSuite Playground'),
       });
-      const surfaceBlockId = pageRef.current.addBlock(
-        'affine:surface',
-        {},
-        _pageBlockId
-      );
-      addShapeElement(pageRef.current, surfaceBlockId, {
-        id: '0',
-        index: 'a0',
-        type: 'shape',
-        xywh: '[0,-100,100,100]',
-        seed: Math.floor(Math.random() * 2 ** 31),
-        shapeType: 'rect',
-        radius: 0,
-        filled: false,
-        fillColor: DEFAULT_SHAPE_FILL_COLOR,
-        strokeWidth: 4,
-        strokeColor: DEFAULT_SHAPE_STROKE_COLOR,
-        strokeStyle: StrokeStyle.Solid,
-        roughness: 2,
-      });
       pageBlockIdRef.current = _pageBlockId;
     }
   }, []);
