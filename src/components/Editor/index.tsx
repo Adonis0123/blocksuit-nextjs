@@ -1,17 +1,12 @@
 'use client'; // This is a client component 👈🏽
 import React, { useEffect, useRef, useState } from 'react';
 
-import { addShapeElement, createEditor, createWorkspaceOptions } from './utils';
+import {  createEditor, createWorkspaceOptions } from './utils';
 import { __unstableSchemas, AffineSchemas } from '@blocksuite/blocks/models';
 import { useMount, useUpdateEffect } from 'ahooks';
 import type { Page } from '@blocksuite/store';
 import { Text, Workspace } from '@blocksuite/store';
 import { ContentParser } from '@blocksuite/blocks/content-parser';
-import {
-  DEFAULT_SHAPE_FILL_COLOR,
-  DEFAULT_SHAPE_STROKE_COLOR,
-} from '@blocksuite/blocks';
-import { StrokeStyle } from '@blocksuite/phasor';
 import '@blocksuite/editor/themes/affine.css';
 import { presetMarkdown } from './data';
 export interface IEditorProps {
