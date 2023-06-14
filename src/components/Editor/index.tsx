@@ -1,7 +1,7 @@
 'use client'; // This is a client component 👈🏽
 import React, { useEffect, useRef, useState } from 'react';
 
-import {  createEditor, createWorkspaceOptions } from './utils';
+import { createEditor, createWorkspaceOptions } from './utils';
 import { __unstableSchemas, AffineSchemas } from '@blocksuite/blocks/models';
 import { useMount, useUpdateEffect } from 'ahooks';
 import type { Page } from '@blocksuite/store';
@@ -9,6 +9,7 @@ import { Text, Workspace } from '@blocksuite/store';
 import { ContentParser } from '@blocksuite/blocks/content-parser';
 import '@blocksuite/editor/themes/affine.css';
 import { presetMarkdown } from './data';
+import { PageBlockModel, getDefaultPage } from '@blocksuite/blocks';
 export interface IEditorProps {
   className?: string;
 }
@@ -20,8 +21,6 @@ const Editor: React.FC<IEditorProps> = (props) => {
 
   const [displayMarkdown, setDisplayMarkdown] = useState('');
   const [canEditor, setCanEditor] = useState<boolean>(false);
-
- 
 
   useEffect(() => {
     // 获取浏览器参数
@@ -82,9 +81,10 @@ const Editor: React.FC<IEditorProps> = (props) => {
     }
     if (!pageBlockIdRef.current) {
       const _pageBlockId = pageRef.current.addBlock('affine:page', {
-        title: new Text('Welcome to BlockSuite Playground'),
+        title: new Text('Wel'),
       });
       pageBlockIdRef.current = _pageBlockId;
+
     }
   }, []);
 
@@ -110,13 +110,30 @@ const Editor: React.FC<IEditorProps> = (props) => {
       });
   }, [displayMarkdown]);
 
+  const onChangeTitle = () => {
+    if (pageBlockIdRef.current) {
+      const block = pageRef.current.getBlockById(pageBlockIdRef.current) as PageBlockModel
+      if (block) {
+        const text = (block.title) 
+        const pageComponent = getDefaultPage(pageRef.current);
+        text.replace(0, text.length, 'new title123')
+        pageComponent?.blur()
+      }
+    }
+  };
+
   return (
-    <div
-      ref={ref}
-      className={`h-[90vh] w-full editor-wrap ${
-        canEditor ? '' : 'pointer-events-none'
-      }`}
-    />
+    <>
+      <div
+        ref={ref}
+        className={`h-[90vh] w-full editor-wrap ${
+          canEditor ? '' : 'pointer-events-none'
+        }`}
+      />
+      <div className="flex w-full">
+        <button onClick={onChangeTitle}>change title</button>
+      </div>
+    </>
   );
 };
 
