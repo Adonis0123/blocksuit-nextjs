@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { createEditor, createWorkspaceOptions } from './utils';
 import { __unstableSchemas, AffineSchemas } from '@blocksuite/blocks/models';
-import { useMount, useUpdateEffect } from 'ahooks';
+import { useMount, useUpdate, useUpdateEffect } from 'ahooks';
 import type { Page } from '@blocksuite/store';
 import { Text, Workspace } from '@blocksuite/store';
 import { ContentParser } from '@blocksuite/blocks/content-parser';
@@ -84,7 +84,6 @@ const Editor: React.FC<IEditorProps> = (props) => {
         title: new Text('Wel'),
       });
       pageBlockIdRef.current = _pageBlockId;
-
     }
   }, []);
 
@@ -112,12 +111,19 @@ const Editor: React.FC<IEditorProps> = (props) => {
 
   const onChangeTitle = () => {
     if (pageBlockIdRef.current) {
-      const block = pageRef.current.getBlockById(pageBlockIdRef.current) as PageBlockModel
+      const block = pageRef.current.getBlockById(
+        pageBlockIdRef.current
+      ) as PageBlockModel;
       if (block) {
-        const text = (block.title) 
         const pageComponent = getDefaultPage(pageRef.current);
-        text.replace(0, text.length, 'new title123')
-        pageComponent?.blur()
+
+        /* 重置title且失焦 */
+        if (pageComponent) {
+          pageComponent.titleVEditor.setText('new title123');
+          setTimeout(() => {
+            pageComponent.titleVEditor.rootElement.blur();
+          }, 10);
+        }
       }
     }
   };
