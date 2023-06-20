@@ -88,25 +88,28 @@ const Editor: React.FC<IEditorProps> = (props) => {
   }, []);
 
   useUpdateEffect(() => {
-    if (!pageRef.current) {
+    const page = pageRef.current;
+    if (!page) {
       return;
     }
-    if (frameId) {
-      const block = pageRef.current.getBlockById(frameId);
-      if (block) {
-        pageRef.current.deleteBlock(block);
+    const root = page.root;
+    if (root) {
+      const blocks = root.children;
+      console.log(blocks);
+      if (blocks.length) {
+        blocks.forEach((item) => {
+          page.deleteBlock(item);
+        });
       }
     }
-    const newFrameId = pageRef.current.addBlock(
+    page.resetHistory();
+
+    const frameId = pageRef.current.addBlock(
       'affine:frame',
       {},
       pageBlockIdRef.current
     );
-    contentParserRef.current
-      .importMarkdown(displayMarkdown, newFrameId)
-      .then(() => {
-        setFrameId(newFrameId);
-      });
+    contentParserRef.current.importMarkdown(displayMarkdown, frameId);
   }, [displayMarkdown]);
 
   const onChangeTitle = () => {
@@ -128,6 +131,22 @@ const Editor: React.FC<IEditorProps> = (props) => {
     }
   };
 
+  const onDelAllBlocks = () => {
+    const page = pageRef.current;
+    if (page) {
+      const root = page.root;
+      if (root) {
+        const blocks = root.children;
+
+        if (blocks.length) {
+          blocks.forEach((item) => {
+            page.deleteBlock(item);
+          });
+        }
+      }
+    }
+  };
+
   return (
     <>
       <div
@@ -136,8 +155,11 @@ const Editor: React.FC<IEditorProps> = (props) => {
           canEditor ? '' : 'pointer-events-none'
         }`}
       />
-      <div className="flex w-full">
-        <button onClick={onChangeTitle}>change title</button>
+      <div className="flex w-full gap-x-2">
+        <button className="" onClick={onChangeTitle}>
+          change title
+        </button>
+        <button onClick={onDelAllBlocks}>del all blocks</button>
       </div>
     </>
   );
